@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/timam/timam/pkg/config"
+	"github.com/timam/timam/pkg/modles"
 	"html/template"
 	"log"
 	"net/http"
@@ -20,8 +21,12 @@ func NewTemplates(a *config.AppConfig){
 	app = a
 }
 
+func AddDefaultData(td *modles.TemplateData) *modles.TemplateData  {
+	return td
+}
+
 //RenderTemplate renders templates using html/template
-func RenderTemplate(w http.ResponseWriter, tmpl string) {
+func RenderTemplate(w http.ResponseWriter, tmpl string, td *modles.TemplateData) {
 	var tc map[string]*template.Template
 
 	if app.UseCache{
@@ -31,15 +36,17 @@ func RenderTemplate(w http.ResponseWriter, tmpl string) {
 		tc, _ = CreateTemplateCache()
 	}
 
-
-
 	t, ok := tc[tmpl]
 	if !ok {
 		log.Fatal("Could not get template form template cache")
 	}
 
 	buf := new(bytes.Buffer)
-	_ = t.Execute(buf,nil)
+
+	td = AddDefaultData(td)
+
+	_ = t.Execute(buf,td)
+
 	_, err := buf.WriteTo(w)
 	if err != nil{
 		fmt.Println("Error writing template to browser", err)
